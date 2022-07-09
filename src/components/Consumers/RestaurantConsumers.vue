@@ -1,5 +1,5 @@
 <template>
-  <img :src=currentConsumer.path alt="consumer" class="consumer" :class="{'waiting': isWaiting}"
+  <img :src=currentConsumer.path alt="consumer" class="chef" :class="{'waiting': isWaiting}"
        v-if="consumerId !== 0"
        :style="{width: size, backgroundImage: isWaiting ? '' : background[consumerId % 3]}"
   />
@@ -7,46 +7,44 @@
 </template>
 
 <script lang="ts" setup>
-import { defineProps, ref } from 'vue'
+import { ref } from 'vue'
 
 interface ConsumerConfig {
   path: string,
-  background: string
 }
+
+// enum ConsumerStatus {
+//   waiting4Seat,
+//   waiting4Meal,
+//   eating,
+//   angry
+// }
 
 const consumerMap = new Map<number, ConsumerConfig>(
   [
     [0, {
-      path: '',
-      background: 'linear-gradient(to bottom right, #EA4035, #A32015)'
+      path: ''
     }],
     [1, {
-      path: '/consumer-1.png',
-      background: 'linear-gradient(to bottom right, #EA4035, #A32015)'
+      path: '/consumer-1.png'
     }],
     [2, {
-      path: '/consumer-2.png',
-      background: 'linear-gradient(to bottom right, #A1FC4E, #4FAF32)'
+      path: '/consumer-2.png'
     }],
     [3, {
-      path: '/consumer-3.png',
-      background: 'linear-gradient(to bottom right, #EA4035, #A32015)'
+      path: '/consumer-3.png'
     }],
     [4, {
-      path: '/consumer-4.png',
-      background: 'linear-gradient(to bottom right, #EA4035, #A32015)'
+      path: '/consumer-4.png'
     }],
     [5, {
-      path: '/consumer-5.png',
-      background: 'linear-gradient(to bottom right, #F09641, #CC732A)'
+      path: '/consumer-5.png'
     }],
     [6, {
-      path: '/consumer-6.png',
-      background: 'linear-gradient(to bottom right, #F09641, #CC732A)'
+      path: '/consumer-6.png'
     }],
     [7, {
-      path: '/consumer-7.png',
-      background: 'linear-gradient(to bottom right, #EA4035, #A32015)'
+      path: '/consumer-7.png'
     }]
   ]
 )
@@ -57,6 +55,7 @@ const background: string[] = [
   'linear-gradient(to bottom right, #A1FC4E, #4FAF32)'
 ]
 
+// eslint-disable-next-line no-undef
 const props = defineProps({
   size: {
     default: '100%',
@@ -76,7 +75,7 @@ const currentConsumer = ref<ConsumerConfig>(consumerMap.get(props.consumerId) as
 </script>
 
 <style scoped>
-.consumer {
+.chef {
   border: white solid 5px;
   border-radius: 50%;
 }

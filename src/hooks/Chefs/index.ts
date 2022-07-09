@@ -1,8 +1,8 @@
-import { onUnmounted, ref } from 'vue'
+import { ref } from 'vue'
 
-export function useTimeAutoIncr () {
-  const day = ref<number>(1)
-  const week = ref<number>(1)
+export function useTimeAutoIncr (w = 1, d = 1) {
+  const day = ref<number>(d)
+  const week = ref<number>(w)
   const timer = setInterval(() => {
     if (day.value < 7) {
       day.value++
@@ -10,10 +10,8 @@ export function useTimeAutoIncr () {
       day.value = 1
       week.value += 1
     }
-  }, 600 * 1)
-  onUnmounted(() => {
-    clearTimeout(timer)
-  })
+  }, 0.5 * 1000)
+
   return {
     day,
     week,

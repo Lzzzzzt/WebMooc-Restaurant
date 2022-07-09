@@ -1,16 +1,74 @@
 import { defineStore } from 'pinia'
+import { useTimeAutoIncr } from '@/hooks/Chefs'
+import { Meal, MealType } from '@/types/Meal'
+import { ref } from 'vue'
 
-// useStore could be anything like useUser, useCart
-// the first argument is a unique id of the store across your application
-export const useRestaurantStore = defineStore('Restaurant', {
-  state: () => {
-    return {
-      money: 5000
+export const useRestaurantStore = defineStore('Restaurant', () => {
+  // 钱
+  const money = ref<number>(500)
+
+  // 菜单
+  const dishes = ref<Map<number, Meal>>(new Map<number, Meal>())
+  const dish = [
+    {
+      id: 0,
+      name: '凉拌黄瓜',
+      price: 8,
+      type: MealType.PRE,
+      time: 30
+    },
+    {
+      id: 1,
+      name: '凉拌凤爪',
+      price: 16,
+      type: MealType.PRE,
+      time: 40
+    },
+    {
+      id: 2,
+      name: '花生米',
+      price: 4,
+      type: MealType.PRE,
+      time: 20
     }
-  },
-  actions: {
-    addMoney (val: number) {
-      this.money += val
+  ] as Meal[]
+  dish.forEach(value => dishes.value.set(value.id, value))
+
+  // 时间
+  const time = ref({
+    ...useTimeAutoIncr(),
+    stop: false
+  })
+
+  function Stop () {
+    clearInterval(time.value.timer)
+    time.value.stop = true
+  }
+
+  function Proceed () {
+    if (time.value.stop) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      time.value = {
+        ...useTimeAutoIncr(time.value.week, time.value.day),
+        stop: false
+      }
     }
+  }
+
+  // 点菜队列
+  const WaitList = ref<number[]>([])
+
+  return {
+    // 钱
+    money,
+    // 菜
+    dishes,
+    // 时间
+    time,
+    Stop,
+    Proceed,
+    // 点菜队列
+    WaitList
   }
 })
