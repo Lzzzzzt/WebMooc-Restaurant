@@ -2,14 +2,18 @@
   <div id="root">
     <Dialog v-model:active="menu" style="z-index: 9999;">
       <template #header>
-        <h2 style="text-align: center">菜单</h2>
+        <h2 style="text-align: center; margin-bottom: 3px">菜单</h2>
+        <h4 style="text-align: center; margin: 3px;">共计{{ price }}元</h4>
       </template>
       <template #content>
-      <span v-for="dish in RestaurantStore.dishes.values()" :key="dish.id">
+      <span v-for="dish in RestaurantStore.dishes.values()" :key="dish.id"
+            style="display:flex; justify-content: space-between;">
         <label>
-          <input v-model="checked" :value="dish.id" type="checkbox">
+          <input :key="dish.id" v-model="checked" :disabled="checked.length >= 3 && checked.indexOf(dish.id) === -1"
+                 :value="dish.id" type="checkbox">
           {{ dish.name }}
         </label>
+        <span> {{ dish.price }}元 </span>
       </span>
       </template>
       <template #action>
@@ -38,7 +42,7 @@
         </template>
         <template #content>
       <span>
-        雇佣厨师需要花钱
+        雇佣厨师需要花钱(100元)
       </span>
         </template>
         <template #action>
@@ -52,8 +56,8 @@
     <!--  consumers-eating-area -->
     <div id="consumers">
       <Component
-        v-for="seat in RestaurantStore.seats"
         :is="seat.consumer === null ? Seat : Consumer"
+        v-for="seat in RestaurantStore.seats"
         :key="seat.consumer ? seat.consumer : -seat.id - 1"
         :pic-id="seat.picId"
         :seat="seat.id"
@@ -64,8 +68,8 @@
     <div id="consumers-waiting">
       <Consumer v-for="waiting in ConsumersStore.ConsumerWaitList"
                 :key="waiting.consumer"
-                :pic-id="waiting.picId"
                 :c-id="waiting.consumer"
+                :pic-id="waiting.picId"
                 is-waiting
                 size="20%"
                 @click="Consumer2Seat"
@@ -101,10 +105,11 @@ import Consumer from '@/components/Consumers/RestaurantConsumers.vue'
 import Button from '@/components/RestaurantButton.vue'
 import Dialog from '@/components/RestaurantDialog.vue'
 import { useRestaurantStore } from '@/store'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useChefsStore } from '@/store/Chefs'
 import { useConsumersStore } from '@/store/Consumers'
 import { useAutoAddConsumer } from '@/hooks/Consumers'
+import { Meal } from '@/types/Meal'
 
 const RestaurantStore = useRestaurantStore()
 
@@ -182,6 +187,7 @@ function DistributeDish2Cook ({
       flag = true
       chef.working = id
       chef.serve = target
+      RestaurantStore.money -= (RestaurantStore.dishes.get(id) as Meal).price / 2
     }
   })
 
@@ -189,6 +195,16 @@ function DistributeDish2Cook ({
     RestaurantStore.MealWaitList.splice(0, 1)
   }
 }
+
+const price = computed(() => {
+  let all = 0
+
+  checked.value.forEach(value => {
+    all += (RestaurantStore.dishes.get(value) as Meal).price
+  })
+
+  return all
+})
 
 </script>
 

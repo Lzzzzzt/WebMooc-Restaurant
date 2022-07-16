@@ -36,12 +36,12 @@
       </template>
       <template #content>
       <span>
-        解雇厨师需要花钱
+        解雇厨师需要花钱(50元)
       </span>
       </template>
       <template #action>
         <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 30px;">
-          <Button style="width: 40%;" @click="store.remove(id)">确定解雇</Button>
+          <Button style="width: 40%;" @click="delChef(id)">确定解雇</Button>
           <Button style="width: 40%;" @click="delDialog = false">取消</Button>
         </div>
       </template>
@@ -144,6 +144,11 @@ function handleChefClick () {
       rate.value = 1
     }, 100)
   }
+}
+
+function delChef (id: number) {
+  store.remove(id)
+  RestaurantStore.money -= 50
 }
 
 </script>

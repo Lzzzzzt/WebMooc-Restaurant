@@ -8,6 +8,7 @@
       <slot name="header"></slot>
       <slot name="content"></slot>
       <slot name="action"></slot>
+      <div style="margin-bottom: 10px;"></div>
     </div>
   </div>
 </template>
@@ -73,7 +74,7 @@ onMounted(() => {
   border-radius: 30px;
   background-color: #F8D465;
   width: 80%;
-  height: 300px;
+  height: max-content;
 
   padding: 0 10px;
   position: relative;

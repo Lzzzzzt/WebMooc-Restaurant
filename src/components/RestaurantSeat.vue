@@ -1,12 +1,13 @@
 <template>
   <div :style="{width: size}" class="Empty">
-    <img alt="seat" class="seat" src="/seat.png"/>
+    <img alt="seat" class="seat" :src="seat"/>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 import { useRestaurantStore } from '@/store'
+import seat from '../../public/seat.png'
 
 const RestaurantStore = useRestaurantStore()
 

@@ -1,4 +1,3 @@
-
 export enum Status {
   WAIT,
   ANGRY,
@@ -12,25 +11,25 @@ export const consumerMap = new Map<number, { path: string }>(
       path: ''
     }],
     [1, {
-      path: '/consumer-1.png'
+      path: '/WebMooc-Restaurant/consumer-1.png'
     }],
     [2, {
-      path: '/consumer-2.png'
+      path: '/WebMooc-Restaurant/consumer-2.png'
     }],
     [3, {
-      path: '/consumer-3.png'
+      path: '/WebMooc-Restaurant/consumer-3.png'
     }],
     [4, {
-      path: '/consumer-4.png'
+      path: '/WebMooc-Restaurant/consumer-4.png'
     }],
     [5, {
-      path: '/consumer-5.png'
+      path: '/WebMooc-Restaurant/consumer-5.png'
     }],
     [6, {
-      path: '/consumer-6.png'
+      path: '/WebMooc-Restaurant/consumer-6.png'
     }],
     [7, {
-      path: '/consumer-7.png'
+      path: '/WebMooc-Restaurant/consumer-7.png'
     }]
   ]
 )

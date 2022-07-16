@@ -13,7 +13,7 @@
         marginLeft: `calc(-${size.width} - 6px)`,
         lineHeight: `calc(${size.height})`,
         color: '#fff',
-        fontSize: `calc(${size.height} * 2 / 3)`,
+        fontSize: `calc(${size.height} * 2 / 3)`
     }"
       class="progress-bar">
       {{ text }}
@@ -118,13 +118,11 @@ watch(() => props.reset, () => {
 
 watchEffect(() => {
   if (finished.value >= 1) {
-    unfinished.value = 0
     finished.value = 1
     emit('update:isFinished', true)
   }
   if (unfinished.value <= 0) {
     unfinished.value = 0
-    finished.value = 1
   }
 })
 

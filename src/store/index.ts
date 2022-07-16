@@ -30,7 +30,42 @@ export const useRestaurantStore = defineStore('Restaurant', () => {
       name: '花生米',
       price: 4,
       type: MealType.PRE,
-      time: 20
+      time: 5
+    },
+    {
+      id: 10,
+      name: '红烧肉',
+      price: 68,
+      type: MealType.MAIN,
+      time: 60
+    },
+    {
+      id: 11,
+      name: '番茄炖牛腩',
+      price: 98,
+      type: MealType.MAIN,
+      time: 80
+    },
+    {
+      id: 12,
+      name: '酸菜鱼',
+      price: 58,
+      type: MealType.MAIN,
+      time: 50
+    },
+    {
+      id: 13,
+      name: '农家小炒肉',
+      price: 48,
+      type: MealType.MAIN,
+      time: 45
+    },
+    {
+      id: 14,
+      name: '清爽时蔬',
+      price: 24,
+      type: MealType.MAIN,
+      time: 30
     }
   ] as Meal[]
   dish.forEach(value => dishes.value.set(value.id, value))

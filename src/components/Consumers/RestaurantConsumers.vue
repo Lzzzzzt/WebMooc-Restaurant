@@ -7,9 +7,8 @@
          class="consumer"
     />
     <div v-if="!isWaiting" class="progress-bar-area">
-      <ProgressBar v-for="(meal, index) in currentMeals"
+      <ProgressBar v-for="meal in currentMeals"
                    :key="meal.id"
-                   v-model:is-finished="patient[index]"
                    :finished-color="`#${background[props.picId % 3].split('#')[2].replace(')', '')}`"
                    :size="{height: '18px', width: '70px'}"
                    :start="true"
@@ -92,22 +91,17 @@ const currentMeals = computed(() => {
   return []
 })
 
-const patient = ref(Array.from<boolean>({ length: currentMeals.value.length }))
-
-const status = ref(Status.WAIT)
+const status = ref<Status>()
 
 const leave = ref(false)
 const price = ref(0)
+const maxTime = ref(0)
+
+let timer: number | undefined
 
 watchEffect(() => {
-  if (currentMeals.value.length === 0 && props.seat >= 0) {
+  if (currentMeals.value.length === 0 && price.value !== 0) {
     status.value = Status.PAY
-  } else {
-    status.value = Status.EATING
-  }
-
-  if (patient.value.length !== 0 && patient.value.reduce((previousValue, currentValue) => previousValue && currentValue)) {
-    status.value = Status.ANGRY
   }
 
   if (leave.value && props.isWaiting) {
@@ -115,14 +109,13 @@ watchEffect(() => {
       ConsumersStore.ConsumerWaitList = ConsumersStore.ConsumerWaitList.filter(value => value.consumer !== props.cId)
     }, 1000 * 10)
   }
-})
 
-watch(status, () => {
-  if (status.value === Status.ANGRY) {
-    setTimeout(() => {
+  if (maxTime.value !== 0) {
+    clearTimeout(timer)
+    timer = setTimeout(() => {
       RestaurantStore.seats[props.seat].consumer = null
       RestaurantStore.seats[props.seat].picId = null
-    }, 15 * 1000)
+    }, (maxTime.value) * 1000)
   }
 })
 
@@ -137,6 +130,14 @@ watch(currentMeals, () => {
         time: cur.time
       }
     }).price
+
+    for (const meal of currentMeals.value) {
+      if (meal.time > maxTime.value) {
+        maxTime.value = meal.time
+      }
+    }
+
+    maxTime.value = maxTime.value * 2.5
   }
 })
 
@@ -144,7 +145,6 @@ function handleConsumerClick () {
   if (status.value === Status.PAY) {
     RestaurantStore.seats[props.seat].consumer = null
     RestaurantStore.seats[props.seat].picId = null
-    // TODO: 付钱
     RestaurantStore.money += price.value
   }
 }
