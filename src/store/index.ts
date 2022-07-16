@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
-import { useTimeAutoIncr } from '@/hooks/Chefs'
+import { useTimeAutoIncr } from '@/hooks'
 import { Meal, MealType } from '@/types/Meal'
 import { ref } from 'vue'
+import { Seat } from '@/types'
 
 export const useRestaurantStore = defineStore('Restaurant', () => {
   // 钱
@@ -57,7 +58,38 @@ export const useRestaurantStore = defineStore('Restaurant', () => {
   }
 
   // 点菜队列
-  const WaitList = ref<number[]>([])
+  const MealWaitList = ref<{ id: number, target: number }[]>([])
+
+  // 餐桌比例
+  const radio = ref<number>()
+
+  // 座位
+  const seats = ref<Seat[]>([
+    {
+      id: 0,
+      consumer: null,
+      picId: null,
+      meals: []
+    },
+    {
+      id: 1,
+      consumer: null,
+      picId: null,
+      meals: []
+    },
+    {
+      id: 2,
+      consumer: null,
+      picId: null,
+      meals: []
+    },
+    {
+      id: 3,
+      consumer: null,
+      picId: null,
+      meals: []
+    }
+  ])
 
   return {
     // 钱
@@ -69,6 +101,10 @@ export const useRestaurantStore = defineStore('Restaurant', () => {
     Stop,
     Proceed,
     // 点菜队列
-    WaitList
+    MealWaitList,
+    // 餐桌比例
+    radio,
+    // 座位
+    seats
   }
 })

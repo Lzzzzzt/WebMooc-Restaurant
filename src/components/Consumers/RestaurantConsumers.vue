@@ -1,59 +1,47 @@
 <template>
-  <img :src=currentConsumer.path alt="consumer" class="chef" :class="{'waiting': isWaiting}"
-       v-if="consumerId !== 0"
-       :style="{width: size, backgroundImage: isWaiting ? '' : background[consumerId % 3]}"
-  />
-  <div class="empty" :style="{width:size, height: size}" v-else></div>
+  <div :style="{width: size}" style="position: relative;" @click="handleConsumerClick">
+    <img :class="{'waiting': isWaiting}"
+         :src=pic.path
+         :style="{width: '100%', backgroundImage: isWaiting ? '' : background[picId % 3]}"
+         alt="consumer"
+         class="consumer"
+    />
+    <div v-if="!isWaiting" class="progress-bar-area">
+      <ProgressBar v-for="(meal, index) in currentMeals"
+                   :key="meal.id"
+                   v-model:is-finished="patient[index]"
+                   :finished-color="`#${background[props.picId % 3].split('#')[2].replace(')', '')}`"
+                   :size="{height: '18px', width: '70px'}"
+                   :start="true"
+                   :text="meal.name"
+                   :time="meal.time * 2"
+                   :unfinished-color="`#${background[props.picId % 3].split('#')[1].replace(',', '')}`"
+                   style="margin-bottom: 3px;"
+      />
+    </div>
+    <ProgressBar v-else
+                 v-model:is-finished="leave"
+                 :size="{height: '18px', width: '55px'}"
+                 :start="true"
+                 :text="'等位'"
+                 :time="60 + 30 * (Math.random() - 0.5)"
+                 class="waiting-progress-bar"
+                 finished-color="#2E6BD2"
+                 style="margin-bottom: 3px;"
+                 unfinished-color="#4A91F7"
+    />
+    <img v-show="Status.PAY === status" :src="Coin" alt="coin" class="coin">
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
-
-interface ConsumerConfig {
-  path: string,
-}
-
-// enum ConsumerStatus {
-//   waiting4Seat,
-//   waiting4Meal,
-//   eating,
-//   angry
-// }
-
-const consumerMap = new Map<number, ConsumerConfig>(
-  [
-    [0, {
-      path: ''
-    }],
-    [1, {
-      path: '/consumer-1.png'
-    }],
-    [2, {
-      path: '/consumer-2.png'
-    }],
-    [3, {
-      path: '/consumer-3.png'
-    }],
-    [4, {
-      path: '/consumer-4.png'
-    }],
-    [5, {
-      path: '/consumer-5.png'
-    }],
-    [6, {
-      path: '/consumer-6.png'
-    }],
-    [7, {
-      path: '/consumer-7.png'
-    }]
-  ]
-)
-
-const background: string[] = [
-  'linear-gradient(to bottom right, #EA4035, #A32015)',
-  'linear-gradient(to bottom right, #F09641, #CC732A)',
-  'linear-gradient(to bottom right, #A1FC4E, #4FAF32)'
-]
+import { computed, onMounted, ref, watch, watchEffect } from 'vue'
+import { useRestaurantStore } from '@/store'
+import { background, consumerMap, Status } from '@/types/Consumer'
+import { Meal } from '@/types/Meal'
+import Coin from '../../../public/coin.png'
+import ProgressBar from '@/components/ProgressBar.vue'
+import { useConsumersStore } from '@/store/Consumers'
 
 // eslint-disable-next-line no-undef
 const props = defineProps({
@@ -61,37 +49,141 @@ const props = defineProps({
     default: '100%',
     type: String
   },
-  consumerId: {
+  picId: {
     default: 0,
     type: Number
   },
   isWaiting: {
     default: false,
     type: Boolean
+  },
+  seat: {
+    default: -1,
+    type: Number
+  },
+  cId: {
+    default: -1,
+    type: Number
   }
 })
 
-const currentConsumer = ref<ConsumerConfig>(consumerMap.get(props.consumerId) as ConsumerConfig)
+const RestaurantStore = useRestaurantStore()
+
+const ConsumersStore = useConsumersStore()
+
+if (!RestaurantStore.radio) {
+  const parent = ref<HTMLElement>()
+
+  onMounted(() => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    parent.value = document.querySelector('#consumers')! as HTMLElement
+    RestaurantStore.radio = parent.value.clientWidth / parent.value.clientHeight
+  })
+}
+
+const pic = ref<{ path: string }>(consumerMap.get(props.picId) as { path: string })
+
+const currentMeals = computed(() => {
+  if (props.seat >= 0) {
+    return RestaurantStore.seats[props.seat].meals.map(value => {
+      return RestaurantStore.dishes.get(value) as Meal
+    })
+  }
+  return []
+})
+
+const patient = ref(Array.from<boolean>({ length: currentMeals.value.length }))
+
+const status = ref(Status.WAIT)
+
+const leave = ref(false)
+const price = ref(0)
+
+watchEffect(() => {
+  if (currentMeals.value.length === 0 && props.seat >= 0) {
+    status.value = Status.PAY
+  } else {
+    status.value = Status.EATING
+  }
+
+  if (patient.value.length !== 0 && patient.value.reduce((previousValue, currentValue) => previousValue && currentValue)) {
+    status.value = Status.ANGRY
+  }
+
+  if (leave.value && props.isWaiting) {
+    setTimeout(() => {
+      ConsumersStore.ConsumerWaitList = ConsumersStore.ConsumerWaitList.filter(value => value.consumer !== props.cId)
+    }, 1000 * 10)
+  }
+})
+
+watch(status, () => {
+  if (status.value === Status.ANGRY) {
+    setTimeout(() => {
+      RestaurantStore.seats[props.seat].consumer = null
+      RestaurantStore.seats[props.seat].picId = null
+    }, 15 * 1000)
+  }
+})
+
+watch(currentMeals, () => {
+  if (currentMeals.value.length > 0 && price.value === 0) {
+    price.value = currentMeals.value.reduce((pre, cur) => {
+      return {
+        name: '',
+        id: -1,
+        price: pre.price + cur.price,
+        type: cur.type,
+        time: cur.time
+      }
+    }).price
+  }
+})
+
+function handleConsumerClick () {
+  if (status.value === Status.PAY) {
+    RestaurantStore.seats[props.seat].consumer = null
+    RestaurantStore.seats[props.seat].picId = null
+    // TODO: 付钱
+    RestaurantStore.money += price.value
+  }
+}
+
 </script>
 
 <style scoped>
-.chef {
+.consumer {
   border: white solid 5px;
   border-radius: 50%;
-}
-
-.empty {
-  border: white solid 8px;
-  border-radius: 50%;
-  background-image: linear-gradient(to bottom right, #DDDDDD, #AAAAAA);
   display: flex;
   justify-content: center;
   align-items: center;
-  /*mask: url('@/assets/chef.png');*/
 }
 
 .waiting {
   margin-left: -15px;
-  background-image: linear-gradient(to bottom right, #4A91F7, #2E6BD2);;
+  background-image: linear-gradient(to bottom right, #4A91F7, #2E6BD2);
+}
+
+.progress-bar-area {
+  display: flex;
+  position: absolute;
+  top: 3%;
+  left: 80%;
+  flex-direction: column;
+}
+
+.waiting-progress-bar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-65%);
+  top: 75%;
+}
+
+.coin {
+  position: absolute;
+  width: 50px;
+  top: 50%;
+  left: -15%;
 }
 </style>

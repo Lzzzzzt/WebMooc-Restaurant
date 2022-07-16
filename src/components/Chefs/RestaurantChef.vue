@@ -1,32 +1,34 @@
 <template>
-  <div style="position: relative">
-    <div :style="{width: size}"
-         class="chef"
-         :class="{
+  <div style="position: relative" @click="handleChefClick">
+    <div :class="{
             'making-pre': dish && dish.type === MealType.PRE,
             'making-main': dish && dish.type === MealType.MAIN,
             'making-drink': dish && dish.type === MealType.DRINK
           }"
-         @mouseover="showClose = true"
+         :style="{width: size}"
+         class="chef"
          @mouseout="showClose = false"
-         @click="handleChefClick"
+         @mouseover="showClose = true"
     >
       <img :src=chef alt="chef" style="width: 100%;">
-      <svg class="icon-close" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" v-show="showClose"
+      <svg v-show="showClose" class="icon-close" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"
            @click="delDialog = true">
         <path d="M576 64H448v384H64v128h384v384h128V576h384V448H576z" fill="#C49B7E"/>
       </svg>
     </div>
-    <img :src="ready" alt="ready" v-show="dishReady" class="dish-ready">
+    <img v-show="dishReady && dish" :src="ready" alt="ready" class="dish-ready">
     <ProgressBar v-show="dish && !dishReady"
                  v-model:is-finished="dishReady"
-                 :time="dish && dish.time"
-                 :start="Boolean(dish)"
-                 :size="{height: '20px', width: '80px'}"
-                 :text="dish && dish.name"
+                 v-model:reset="reset"
                  :finished-color="finishColor"
+                 :rate="rate"
+                 :size="{height: '20px', width: '80px'}"
+                 :start="!!dish"
+                 :stop="stop"
+                 :text="dish && dish.name"
+                 :time="dish && dish.time"
                  :unfinished-color="unfinishedColor"
-                 class="progress-bar"
+                 class="Progress-bar"
     />
     <Dialog v-model:active="delDialog">
       <template #header>
@@ -39,8 +41,8 @@
       </template>
       <template #action>
         <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 30px;">
-          <Button @click="store.remove(id)" style="width: 40%;">确定解雇</Button>
-          <Button @click="delDialog = false" style="width: 40%;">取消</Button>
+          <Button style="width: 40%;" @click="store.remove(id)">确定解雇</Button>
+          <Button style="width: 40%;" @click="delDialog = false">取消</Button>
         </div>
       </template>
     </Dialog>
@@ -114,13 +116,33 @@ const unfinishedColor = computed(() => {
 
 const dishReady = ref<boolean>(false)
 
+const rate = ref<number>(1)
+
+const reset = ref<boolean>(false)
+
+const stop = computed(() => !dish.value)
+
+let timer: number | undefined
+
 function handleChefClick () {
-  if (dishReady.value) {
-    // TODO: 上菜
-    console.log('上菜')
+  if (dishReady.value && dish.value) {
+    for (const seat of RestaurantStore.seats) {
+      if (seat.id === current.value.serve) {
+        seat.meals = seat.meals.filter(value => value !== current.value.working)
+        break
+      }
+    }
+    current.value.working = null
+    current.value.serve = null
+    rate.value = 1
+    dishReady.value = false
+    reset.value = true
   } else {
-    // TODO: 加速
-    console.log('加速')
+    rate.value = 4
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      rate.value = 1
+    }, 100)
   }
 }
 
@@ -162,7 +184,7 @@ function handleChefClick () {
   background-image: linear-gradient(to bottom right, #A1FC4E, #4FAF32);
 }
 
-.progress-bar {
+.Progress-bar {
   position: absolute;
   top: 70%;
   left: 51%;

@@ -10,7 +10,7 @@ export function useTimeAutoIncr (w = 1, d = 1) {
       day.value = 1
       week.value += 1
     }
-  }, 0.5 * 1000)
+  }, 240 * 1000)
 
   return {
     day,

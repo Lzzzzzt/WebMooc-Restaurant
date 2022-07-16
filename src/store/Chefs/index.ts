@@ -13,21 +13,16 @@ export const useChefsStore = defineStore('Chefs', () => {
       id: $id,
       working: null,
       serve: null
-    }],
-    [1, {
-      id: ++$id,
-      working: null,
-      serve: null
     }]
   ]))
 
-  function add () {
+  function add (): boolean {
     if (chefs.value.size >= 6) {
-      return
+      return false
     }
 
     if (restaurantStore.money < 100) {
-      return
+      return false
     }
 
     const id = ++$id
@@ -39,10 +34,12 @@ export const useChefsStore = defineStore('Chefs', () => {
       working: null,
       serve: null
     })
+
+    return true
   }
 
-  function remove (id: number) {
-    chefs.value.delete(id)
+  function remove (id: number): boolean {
+    return chefs.value.delete(id)
   }
 
   return {

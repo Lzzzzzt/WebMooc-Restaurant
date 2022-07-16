@@ -7,13 +7,13 @@
       <template #content>
       <span v-for="dish in RestaurantStore.dishes.values()" :key="dish.id">
         <label>
-          <input type="checkbox" v-model="checked" :value="dish.id">
+          <input v-model="checked" :value="dish.id" type="checkbox">
           {{ dish.name }}
         </label>
       </span>
       </template>
       <template #action>
-        <Button @click="OrderFood" style="margin-top: 20px;">确定</Button>
+        <Button style="margin-top: 20px;" @click="OrderFood">确定</Button>
       </template>
     </Dialog>
 
@@ -24,9 +24,9 @@
     </div>
     <!--  chefs-area -->
     <div id="chefs">
-      <Chef v-for="chef in ChefsStore.chefs.values()" :key="chef.id" size="85%" :id="chef.id"/>
+      <Chef v-for="chef in ChefsStore.chefs.values()" :id="chef.id" :key="chef.id" size="85%"/>
       <!-- add-chef -->
-      <div class="empty" style="width: 85%; min-height: 85%" v-show="ChefsStore.chefs.size < 6"
+      <div v-show="ChefsStore.chefs.size < 6" class="empty" style="width: 85%; min-height: 85%"
            @click="addDialog = true">
         <svg class="icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
           <path d="M576 64H448v384H64v128h384v384h128V576h384V448H576z" fill="#C49B7E"/>
@@ -43,25 +43,33 @@
         </template>
         <template #action>
           <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 30px;">
-            <Button @click="add" style="width: 40%;">确定雇佣</Button>
-            <Button @click="addDialog = false" style="width: 40%;">取消</Button>
+            <Button style="width: 40%;" @click="add">确定雇佣</Button>
+            <Button style="width: 40%;" @click="addDialog = false">取消</Button>
           </div>
         </template>
       </Dialog>
     </div>
     <!--  consumers-eating-area -->
     <div id="consumers">
-      <Consumer size="50%" :consumer-id="1"/>
-      <Consumer size="50%" :consumer-id="5"/>
-      <Consumer size="50%" :consumer-id="6"/>
-      <Consumer size="50%" :consumer-id="4"/>
+      <Component
+        v-for="seat in RestaurantStore.seats"
+        :is="seat.consumer === null ? Seat : Consumer"
+        :key="seat.consumer ? seat.consumer : -seat.id - 1"
+        :pic-id="seat.picId"
+        :seat="seat.id"
+        size="50%"
+      />
     </div>
     <!--  consumers-waiting-area -->
     <div id="consumers-waiting">
-      <Consumer size="20%" :consumer-id="4" is-waiting/>
-      <Consumer size="20%" :consumer-id="4" is-waiting/>
-      <Consumer size="20%" :consumer-id="4" is-waiting/>
-      <Consumer size="20%" :consumer-id="4" is-waiting/>
+      <Consumer v-for="waiting in ConsumersStore.ConsumerWaitList"
+                :key="waiting.consumer"
+                :pic-id="waiting.picId"
+                :c-id="waiting.consumer"
+                is-waiting
+                size="20%"
+                @click="Consumer2Seat"
+      />
     </div>
   </div>
   <Dialog v-model:active="welcome">
@@ -81,21 +89,28 @@
       </div>
     </template>
     <template #action>
-      <Button @click="welcome = false" style="margin-top: 20px;">开始经营吧</Button>
+      <Button style="margin-top: 20px;" @click="welcome = false">开始经营吧</Button>
     </template>
   </Dialog>
 </template>
 
 <script lang="ts" setup>
 import Chef from '@/components/Chefs/RestaurantChef.vue'
+import Seat from '@/components/RestaurantSeat.vue'
 import Consumer from '@/components/Consumers/RestaurantConsumers.vue'
 import Button from '@/components/RestaurantButton.vue'
 import Dialog from '@/components/RestaurantDialog.vue'
 import { useRestaurantStore } from '@/store'
 import { ref, watch } from 'vue'
 import { useChefsStore } from '@/store/Chefs'
+import { useConsumersStore } from '@/store/Consumers'
+import { useAutoAddConsumer } from '@/hooks/Consumers'
 
 const RestaurantStore = useRestaurantStore()
+
+const ConsumersStore = useConsumersStore()
+
+useAutoAddConsumer(15)
 
 const ChefsStore = useChefsStore()
 
@@ -110,42 +125,71 @@ function add () {
 
 const menu = ref<boolean>(false)
 
-setTimeout(() => {
-  menu.value = true
-}, 3000)
-
 const checked = ref<number[]>([])
+
+const target = ref<number>(-1)
+
+function Consumer2Seat () {
+  for (const seat of RestaurantStore.seats) {
+    if (seat.consumer === null) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const consumer = ConsumersStore.ConsumerWaitList.pop()!
+      seat.consumer = consumer.consumer
+      seat.picId = consumer.picId
+      target.value = seat.id
+      menu.value = true
+      break
+    }
+  }
+}
 
 function OrderFood () {
   menu.value = false
-  RestaurantStore.WaitList.push(...checked.value)
+  RestaurantStore.MealWaitList.push(...checked.value.map(value => ({
+    id: value,
+    target: target.value
+  })))
+  RestaurantStore.seats[target.value].meals = checked.value
   checked.value = []
 }
 
-watch(() => RestaurantStore.WaitList, () => {
-  if (RestaurantStore.WaitList.length !== 0) {
-    DistributeDish2Cook(RestaurantStore.WaitList[0])
+watch(() => RestaurantStore.MealWaitList, () => {
+  if (RestaurantStore.MealWaitList.length !== 0) {
+    DistributeDish2Cook(RestaurantStore.MealWaitList[0])
   }
 }, {
   deep: true,
   immediate: true
 })
 
-function DistributeDish2Cook (id: number) {
+watch(() => ChefsStore.chefs, () => {
+  if (RestaurantStore.MealWaitList.length !== 0) {
+    DistributeDish2Cook(RestaurantStore.MealWaitList[0])
+  }
+}, {
+  deep: true,
+  immediate: true
+})
+
+function DistributeDish2Cook ({
+  id,
+  target
+}: { id: number, target: number }) {
   let flag = false
 
   ChefsStore.chefs.forEach(chef => {
     if (!flag && chef.working === null) {
       flag = true
       chef.working = id
-      // TODO: target
+      chef.serve = target
     }
   })
 
   if (flag) {
-    RestaurantStore.WaitList.splice(0, 1)
+    RestaurantStore.MealWaitList.splice(0, 1)
   }
 }
+
 </script>
 
 <style>

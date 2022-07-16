@@ -1,20 +1,21 @@
 <template>
   <div class="progress-bar-root">
-    <div class="progress-bar" :style="{height: size.height, width: size.width}">
-      <div class="finished"
-           :style="{backgroundColor: finishedColor, width: `calc(${size.width} * ${finished})`}"/>
-      <div class="unfinished"
-           :style="{backgroundColor: unfinishedColor, width: `calc(${size.width} * ${unfinished})`}"/>
+    <div :style="{height: size.height, width: size.width}" class="progress-bar">
+      <div :style="{backgroundColor: finishedColor, width: `calc(${size.width} * ${finished})`}"
+           class="finished"/>
+      <div :style="{backgroundColor: unfinishedColor, width: `calc(${size.width} * ${unfinished})`}"
+           class="unfinished"/>
     </div>
     <div
-      class="progress-bar"
       :style="{
         height: size.height,
         width: size.width,
         marginLeft: `calc(-${size.width} - 6px)`,
-        lineHeight: size.height,
-        color: '#fff'
-    }">
+        lineHeight: `calc(${size.height})`,
+        color: '#fff',
+        fontSize: `calc(${size.height} * 2 / 3)`,
+    }"
+      class="progress-bar">
       {{ text }}
     </div>
   </div>
@@ -66,6 +67,14 @@ const props = defineProps({
   isFinished: {
     type: Boolean,
     default: false
+  },
+  reset: {
+    type: Boolean,
+    default: false
+  },
+  stop: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -74,29 +83,49 @@ const finished = ref<number>(0)
 const interval = computed(() => props.time * 1000 / 100)
 
 function working (interval: number) {
-  unfinished.value -= 0.01 * props.rate
-  finished.value += 0.01 * props.rate
+  unfinished.value -= 0.01 * (props.stop ? 0 : props.rate)
+  finished.value += 0.01 * (props.stop ? 0 : props.rate)
 
   if (finished.value <= 1) {
     setTimeout(working, interval, interval)
   }
 }
 
+function reset () {
+  unfinished.value = 1
+  finished.value = 0
+  emit('update:reset', false)
+  working(interval.value)
+}
+
+// eslint-disable-next-line no-undef
+const emit = defineEmits(['update:isFinished', 'update:reset'])
+
 watch(() => props.start, () => {
-  if (props.start && !finished.value) {
-    setTimeout(working, interval.value, interval.value)
+  if (props.start) {
+    working(interval.value)
+  } else {
+    unfinished.value = 1
+    finished.value = 0
   }
 }, { immediate: true })
 
-// eslint-disable-next-line no-undef
-const emit = defineEmits(['update:isFinished'])
+watch(() => props.reset, () => {
+  if (props.reset) {
+    reset()
+  }
+})
 
 watchEffect(() => {
   if (finished.value >= 1) {
+    unfinished.value = 0
     finished.value = 1
     emit('update:isFinished', true)
   }
-  if (unfinished.value <= 0) unfinished.value = 0
+  if (unfinished.value <= 0) {
+    unfinished.value = 0
+    finished.value = 1
+  }
 })
 
 </script>
