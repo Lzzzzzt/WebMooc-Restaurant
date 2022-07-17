@@ -39,6 +39,7 @@ export const useChefsStore = defineStore('Chefs', () => {
   }
 
   function remove (id: number): boolean {
+    restaurantStore.money -= 50
     return chefs.value.delete(id)
   }
 

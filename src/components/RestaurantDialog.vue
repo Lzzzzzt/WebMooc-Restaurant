@@ -2,8 +2,8 @@
   <div id="masking" v-if="active">
     <div id="dialog">
       <svg class="icon-close" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" v-show="showClose"
-           @click="emit('update:active', false)">
-        <path d="M576 64H448v384H64v128h384v384h128V576h384V448H576z" fill="#C49B7E"/>
+        @click="emit('update:active', false)">
+        <path d="M576 64H448v384H64v128h384v384h128V576h384V448H576z" fill="#C49B7E" />
       </svg>
       <slot name="header"></slot>
       <slot name="content"></slot>

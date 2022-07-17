@@ -1,47 +1,32 @@
 <template>
   <div style="position: relative" @click="handleChefClick">
     <div :class="{
-            'making-pre': dish && dish.type === MealType.PRE,
-            'making-main': dish && dish.type === MealType.MAIN,
-            'making-drink': dish && dish.type === MealType.DRINK
-          }"
-         :style="{width: size}"
-         class="chef"
-         @mouseout="showClose = false"
-         @mouseover="showClose = true"
-    >
+      'making-pre': dish && dish.type === MealType.PRE,
+      'making-main': dish && dish.type === MealType.MAIN,
+      'making-drink': dish && dish.type === MealType.DRINK
+    }" :style="{ width: size }" class="chef" @mouseout="showClose = false" @mouseover="showClose = true">
       <img :src=chef alt="chef" style="width: 100%;">
       <svg v-show="showClose" class="icon-close" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"
-           @click="delDialog = true">
-        <path d="M576 64H448v384H64v128h384v384h128V576h384V448H576z" fill="#C49B7E"/>
+        @click="delDialog = true">
+        <path d="M576 64H448v384H64v128h384v384h128V576h384V448H576z" fill="#C49B7E" />
       </svg>
     </div>
     <img v-show="dishReady && dish" :src="ready" alt="ready" class="dish-ready">
-    <ProgressBar v-show="dish && !dishReady"
-                 v-model:is-finished="dishReady"
-                 v-model:reset="reset"
-                 :finished-color="finishColor"
-                 :rate="rate"
-                 :size="{height: '20px', width: '80px'}"
-                 :start="!!dish"
-                 :stop="stop"
-                 :text="dish && dish.name"
-                 :time="dish && dish.time"
-                 :unfinished-color="unfinishedColor"
-                 class="Progress-bar"
-    />
+    <ProgressBar v-show="dish && !dishReady" v-model:is-finished="dishReady" v-model:reset="reset"
+      :finished-color="finishColor" :rate="rate" :size="{ height: '20px', width: '80px' }" :start="!!dish" :stop="stop"
+      :text="dish && dish.name" :time="dish && dish.time" :unfinished-color="unfinishedColor" class="Progress-bar" />
     <Dialog v-model:active="delDialog">
       <template #header>
         <h2 style="text-align: center">解雇厨师</h2>
       </template>
       <template #content>
-      <span>
-        解雇厨师需要花钱(50元)
-      </span>
+        <span>
+          解雇厨师需要花钱(50元)
+        </span>
       </template>
       <template #action>
         <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 30px;">
-          <Button style="width: 40%;" @click="delChef(id)">确定解雇</Button>
+          <Button style="width: 40%;" @click="store.remove(id)">确定解雇</Button>
           <Button style="width: 40%;" @click="delDialog = false">取消</Button>
         </div>
       </template>
@@ -124,7 +109,7 @@ const stop = computed(() => !dish.value)
 
 let timer: number | undefined
 
-function handleChefClick () {
+function handleChefClick() {
   if (dishReady.value && dish.value) {
     for (const seat of RestaurantStore.seats) {
       if (seat.id === current.value.serve) {
@@ -146,15 +131,9 @@ function handleChefClick () {
   }
 }
 
-function delChef (id: number) {
-  store.remove(id)
-  RestaurantStore.money -= 50
-}
-
 </script>
 
 <style scoped>
-
 .chef {
   border: white solid 8px;
   border-radius: 50%;

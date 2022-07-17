@@ -66,6 +66,20 @@ export const useRestaurantStore = defineStore('Restaurant', () => {
       price: 24,
       type: MealType.MAIN,
       time: 30
+    },
+    {
+      id: 101,
+      name: '可口可乐',
+      price: 3,
+      type: MealType.DRINK,
+      time: 10
+    },
+    {
+      id: 102,
+      name: '鲜榨果汁',
+      price: 20,
+      type: MealType.DRINK,
+      time: 30
     }
   ] as Meal[]
   dish.forEach(value => dishes.value.set(value.id, value))
